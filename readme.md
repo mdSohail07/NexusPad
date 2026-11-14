@@ -1,116 +1,129 @@
-# DocSync
+# NexusPad
 
-A Google Docs–style editor built as a full-stack YouTube tutorial. Sign in, open a letter-sized page, type with someone else in real time, and share a view-only link — all on Next.js, with no custom WebSocket server.
+NexusPad is a collaborative document editor built with Next.js. Create documents, edit them in real time with other users, and share view-only links. It uses Tiptap and Liveblocks for rich-text editing and real-time collaboration.
 
-<p align="center">
-  <img src="public/login-page.png" alt="DocSync sign-in screen with Google and email" width="920" />
-</p>
+## Features
 
-<p align="center">
-  <img src="public/dashboard-page.png" alt="DocSync dashboard with new document card and recent documents" width="920" />
-</p>
+- **Authentication** — Email and password authentication, along with Google OAuth. Sessions persist across page refreshes.
+- **Dashboard** — Search documents, create new documents, view recent documents, rename and delete existing documents.
+- **Rich Text Editor** — A document editor with a title bar, File / Edit / Insert / Format menus, formatting toolbar, and a US Letter-sized page.
+- **Real-time Collaboration** — Multiple users can edit the same document simultaneously using Liveblocks and Tiptap.
+- **Presence** — Live cursors with user name labels and participant avatars.
+- **Document Sharing** — Generate public view-only links. Anyone with the link can read the shared document without signing in.
 
-## What you build in the video
+## Tech Stack
 
-- **Auth** — email and password, plus Google OAuth, with sessions that survive a refresh
-- **Dashboard** — a Docs-like homepage: search, Blank card, recent documents, rename and delete
-- **Editor UI** — title bar, File / Edit / Insert / Format menus, icon toolbar, and a white US Letter page
-- **Live editing** — two windows on the same document stay in sync through Liveblocks and Tiptap
-- **Presence** — colored live cursors with name labels, and avatars next to Share
-- **Share** — anyone with the link can read the document. No account required. They cannot edit.
+| Layer | Technology | Purpose |
+|---|---|---|
+| App | Next.js 16 (App Router) | UI, server actions, and API routes |
+| Editor | Tiptap 3 | Rich-text editing |
+| Realtime | Liveblocks | Yjs synchronization, presence, and live cursors |
+| Authentication | Auth.js v5 | Credentials and Google OAuth |
+| Database | Supabase PostgreSQL + Prisma | User and document metadata |
+| Client Cache | TanStack Query | Dashboard data management |
+| Styling | Tailwind CSS v4 | UI styling |
+| Deployment | Vercel | Application hosting |
 
-## Stack
+**Architecture note:** TanStack Query manages document metadata stored in PostgreSQL. Liveblocks handles real-time document collaboration and synchronization. These responsibilities are kept separate.
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| App | Next.js 16 (App Router) | UI, server actions, and API routes in one project |
-| Editor | Tiptap 3 | Headless rich text with an official Liveblocks extension |
-| Realtime | Liveblocks | Yjs sync, presence, and live cursors without a custom socket server |
-| Auth | Auth.js v5 | Credentials + Google. Not Supabase Auth |
-| Database | Supabase Postgres + Prisma | Users and document metadata only |
-| Client cache | TanStack Query | Dashboard list, rename, delete |
-| Style | Tailwind CSS v4 | Spacing and colors close to Google Docs |
-| Host | Vercel | One deploy for the app and the auth/liveblocks routes |
+## How It Works
 
-**Boundary to keep clear:** TanStack Query talks to your Postgres metadata. Liveblocks owns the live document body. Those two jobs do not mix.
+1. Auth.js authenticates users and manages their sessions.
+2. The dashboard retrieves document metadata from PostgreSQL through Prisma.
+3. Opening a document connects Tiptap to a Liveblocks room using the document ID.
+4. The `/api/liveblocks-auth` endpoint verifies the user's session and document ownership before generating a room access token.
+5. Document changes are synchronized between collaborators using Yjs updates through Liveblocks.
+6. Live cursors and participant avatars display the presence of other users.
+7. When a document is shared, its current HTML content is saved as a snapshot in PostgreSQL and a unique public sharing URL is generated.
+8. Shared documents are accessible through a view-only page without requiring authentication.
 
-## How it fits together
+## Run Locally
 
-1. Auth.js signs the user in. The dashboard loads their documents from Postgres through Prisma.
-2. Opening a file wraps Tiptap in a Liveblocks room whose id is the document id.
-3. `/api/liveblocks-auth` checks the session and that the user owns that document, then mints a room token.
-4. Keystrokes go out as small Yjs updates. Everyone in the room merges them automatically.
-5. Presence is rendered as a caret + name in the page, and as overlapping avatars beside Share.
-6. Share snapshots the current HTML into Postgres and mints a secret `/share/<token>` URL. That page is view-only and skips login.
+### Requirements
 
-## Tutorial chapters
+- Node.js 20+
+- A [Supabase](https://supabase.com) project (PostgreSQL)
+- A [Liveblocks](https://liveblocks.io) secret key
+- Google OAuth credentials (optional)
 
-Each chapter is a git branch. Check one out to land on the exact state of that part of the video.
+### Installation
 
-| # | Branch | Chapter |
-| --- | --- | --- |
-| 1 | `01-project-setup-and-auth` | Project setup and authentication |
-| 2 | `02-dashboard-and-document-crud` | Dashboard and document CRUD |
-| 3 | `03-google-docs-ui-shell` | Google Docs editor UI |
-| 4 | `04-realtime-collaborative-editing` | Real-time editing with Liveblocks and Tiptap |
-| 5 | `05-presence-and-live-cursors` | Live cursors and presence avatars |
-| 6 | `06-public-read-only-share` | Public view-only share link |
+Clone the repository:
 
 ```bash
-git checkout 04-realtime-collaborative-editing
+git clone https://github.com/mdSohail07/NexusPad.git
+cd NexusPad
 ```
 
-Chapter notes (what shipped, and files in the order they were added) live in `docs/<branch-name>.md`.
-
-## Run it locally
-
-**Need:** Node.js 20+, a [Supabase](https://supabase.com) project (Postgres only), a [Liveblocks](https://liveblocks.io) secret key, and optional Google OAuth credentials.
+Install dependencies:
 
 ```bash
-git clone <your-fork-or-this-repo>
-cd google-docs-clone
 npm install
+```
+
+Create your environment file:
+
+```bash
 cp .env.example .env
 ```
 
-Fill `.env`, then:
+Configure the environment variables in `.env`.
+
+Run database migrations:
 
 ```bash
 npx prisma migrate deploy
+```
+
+Start the development server:
+
+```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Environment variables
+## Environment Variables
 
-Copy from `.env.example`. Never commit `.env`.
+Copy the variables from `.env.example` into `.env`.
 
-| Variable | Where it comes from |
-| --- | --- |
-| `DATABASE_URL` | Supabase → Connect → Transaction pooler (`6543`, `?pgbouncer=true`) |
-| `DIRECT_URL` | Supabase → Connect → Session pooler (`5432`, `?sslmode=require`) |
-| `AUTH_SECRET` | `openssl rand -base64 32` |
-| `AUTH_URL` | `http://localhost:3000` locally |
-| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google Cloud → Credentials → Web client. Redirect URI: `http://localhost:3000/api/auth/callback/google` |
-| `LIVEBLOCKS_SECRET_KEY` | Liveblocks dashboard → API keys → **secret**. Server only |
-| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase project URL and publishable key (they identify the project; Prisma still needs the Postgres URLs) |
+| Variable | Description |
+|---|---|
+| `DATABASE_URL` | Supabase transaction pooler connection URL |
+| `DIRECT_URL` | Supabase session pooler connection URL |
+| `AUTH_SECRET` | Secret used by Auth.js |
+| `AUTH_URL` | Application URL, such as `http://localhost:3000` |
+| `AUTH_GOOGLE_ID` | Google OAuth client ID |
+| `AUTH_GOOGLE_SECRET` | Google OAuth client secret |
+| `LIVEBLOCKS_SECRET_KEY` | Liveblocks server-side secret key |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase publishable key |
 
-Do **not** turn on Google inside Supabase Auth. Google sign-in is handled entirely by Auth.js.
+For Google OAuth, configure the following redirect URI in Google Cloud Console:
 
-### Scripts
-
-```bash
-npm run dev          # Next.js dev server
-npm run build        # prisma generate && next build
-npm start            # production server
-npx prisma migrate deploy
+```text
+http://localhost:3000/api/auth/callback/google
 ```
 
-## What this project does not include
+**Important:**
+- Never commit your `.env` file.
+- Keep secret keys on the server side.
+- Google authentication is handled by Auth.js, not Supabase Auth.
 
-The original outline left comments, notifications, version history, and role-based invites as a later Part 2. This repo stops at a public **view-only** share link. Live document content lives in Liveblocks; the share page shows the HTML snapshot taken when the owner last clicked Share.
+## Available Scripts
 
-## License
+```bash
+npm run dev          # Start the development server
+npm run build        # Generate Prisma client and build Next.js
+npm start            # Start the production server
+npx prisma migrate deploy  # Apply database migrations
+```
 
-Built as a tutorial companion. Use and remix it for learning and your own videos.
+## Current Limitations
+
+- Public document sharing currently supports view-only access.
+- Shared document pages display an HTML snapshot captured when the owner clicks Share.
+- Comments, notifications, document version history, and role-based invitations are not currently included.
+
+
+
