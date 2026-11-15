@@ -12,8 +12,8 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "DocSync",
-    template: "%s · DocSync",
+    default: "NexusPad",
+    template: "%s · NexusPad",
   },
   description: "A real-time collaborative document editor.",
 };

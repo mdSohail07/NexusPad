@@ -37,11 +37,10 @@ export function Logo({
       </svg>
       {showWordmark ? (
         <span
-          className={`tracking-tight ${
-            size === "sm" ? "text-lg font-medium" : "text-[22px] font-medium"
-          } ${wordmarkClass}`}
+          className={`tracking-tight ${size === "sm" ? "text-lg font-medium" : "text-[22px] font-medium"
+            } ${wordmarkClass}`}
         >
-          DocSync
+          NexusPad
         </span>
       ) : null}
     </div>

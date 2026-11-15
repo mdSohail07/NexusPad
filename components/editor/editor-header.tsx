@@ -43,7 +43,7 @@ export function EditorHeader({
         <div className="flex min-w-0 items-center gap-1">
           <Link
             href="/"
-            aria-label="Back to DocSync home"
+            aria-label="Back to NexusPad home"
             className="shrink-0 rounded-full p-1 hover:bg-black/[0.06]"
           >
             <Logo size="sm" showWordmark={false} />
